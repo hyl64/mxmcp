@@ -8,6 +8,7 @@ framework (CommandLineManager & friends) the app references.
 from __future__ import annotations
 
 import json
+import os
 import re
 import struct
 import sys
@@ -16,7 +17,9 @@ import zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent.parent
-EXE = Path(r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX\STM32CubeMX.exe")
+EXE = Path(os.environ.get(
+    "MXMCP_CUBEMX_ROOT",
+    r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX")) / "STM32CubeMX.exe"
 CD = json.loads((HERE / "analysis" / "cd_entries.json").read_text(encoding="utf-8"))
 OUT = HERE / "_extract"
 OUT.mkdir(exist_ok=True)

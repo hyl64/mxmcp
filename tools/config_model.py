@@ -21,11 +21,14 @@ Writes analysis/config_model.json and (compactly) into the data pack.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-ROOT = Path(r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX\db\mcu\config")
+ROOT = Path(os.environ.get(
+    "MXMCP_CUBEMX_ROOT",
+    r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX")) / "db" / "mcu" / "config"
 HERE = Path(__file__).resolve().parent.parent
 OUT = HERE / "analysis" / "config_model.json"
 DATA = HERE / "mxmcp" / "data" / "config_model.json"

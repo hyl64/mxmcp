@@ -9,11 +9,14 @@ Emits:
 from __future__ import annotations
 
 import json
+import os
 import struct
 import sys
 from pathlib import Path
 
-EXE = Path(r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX\STM32CubeMX.exe")
+EXE = Path(os.environ.get(
+    "MXMCP_CUBEMX_ROOT",
+    r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX")) / "STM32CubeMX.exe"
 OUT = Path(__file__).resolve().parent.parent / "analysis"
 
 CD_SIG = b"PK\x01\x02"
@@ -41,11 +44,26 @@ def walk_cd(data: bytes, cd_off: int) -> list[dict]:
 
 
 def find_cd(data: bytes) -> int:
-    """The first plausible central-directory start."""
-    for cand in (0x0D2F0A03,):
-        if data[cand:cand + 4] == CD_SIG:
-            return cand
-    i = data.find(CD_SIG, 0x0D000000)
+    """Locate the central directory, independent of the CubeMX version.
+
+    The 6.15 offsets are gone in 6.17, so drive this from the End-Of-Central-
+    Directory record instead of any hardcoded address:
+      cd starts at (eocd - cd_size) whenever the archive has no trailing comment.
+    """
+    eocd = data.rfind(b"PK\x05\x06")
+    if eocd > 0:
+        cd_size, cd_offset = struct.unpack_from("<II", data, eocd + 12)
+        for cand in (eocd - cd_size,):
+            if data[cand:cand + 4] == CD_SIG:
+                return cand
+        # SFX variants: the stored offset is relative to the archive base
+        base = data.find(LH_SIG, 0x1000)
+        if base > 0 and data[base + cd_offset:base + cd_offset + 4] == CD_SIG:
+            return base + cd_offset
+        if data[cd_offset:cd_offset + 4] == CD_SIG:
+            return cd_offset
+    # last resort: scan the whole file for a plausible record
+    i = data.find(CD_SIG, 0x1000)
     while i > 0:
         nlen = struct.unpack_from("<H", data, i + F["nlen"])[0]
         if 3 <= nlen <= 300 and all(32 <= c < 127 for c in

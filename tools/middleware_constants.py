@@ -10,12 +10,15 @@ Writes analysis/middleware_constants.json and mxmcp/data/middleware.json.
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-JAVAP = r"C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot\bin\javap.exe"
+JAVAP = os.environ.get("MXMCP_JAVAP") or shutil.which("javap") or \
+    r"C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot\bin\javap.exe"
 HERE = Path(__file__).resolve().parent.parent
 JAR = HERE / "_extract" / "cubemx_full.jar"
 CLS = "com.st.microxplorer.mcu.MiddleWareConstants"

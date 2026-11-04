@@ -11,15 +11,20 @@ Output: analysis/cli_registry.json (+ human readable docs/CLI_REGISTRY.md).
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 import zipfile
 from pathlib import Path
 
-JAVAP = r"C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot\bin\javap.exe"
+JAVAP = os.environ.get("MXMCP_JAVAP") or shutil.which("javap") or \
+    r"C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot\bin\javap.exe"
 HERE = Path(__file__).resolve().parent.parent
-ROOT = Path(r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX")
+ROOT = Path(os.environ.get(
+    "MXMCP_CUBEMX_ROOT",
+    r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeMX"))
 OUT = HERE / "analysis"
 JAR_CANDIDATES = [HERE / "_extract" / "cubemx_full.jar"] + \
     sorted((ROOT / "plugins").glob("*.jar")) + \
